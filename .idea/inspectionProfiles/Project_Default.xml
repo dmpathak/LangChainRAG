@@ -1,0 +1,115 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="myValues">
+        <value>
+          <list size="2">
+            <item index="0" class="java.lang.String" itemvalue="{%" />
+            <item index="1" class="java.lang.String" itemvalue="post" />
+          </list>
+        </value>
+      </option>
+      <option name="myCustomValuesEnabled" value="true" />
+    </inspection_tool>
+    <inspection_tool class="HtmlUnknownTag" enabled="false" level="WARNING" enabled_by_default="false">
+      <option name="myValues">
+        <value>
+          <list size="13">
+            <item index="0" class="java.lang.String" itemvalue="nobr" />
+            <item index="1" class="java.lang.String" itemvalue="noembed" />
+            <item index="2" class="java.lang.String" itemvalue="comment" />
+            <item index="3" class="java.lang.String" itemvalue="noscript" />
+            <item index="4" class="java.lang.String" itemvalue="embed" />
+            <item index="5" class="java.lang.String" itemvalue="script" />
+            <item index="6" class="java.lang.String" itemvalue="b" />
+            <item index="7" class="java.lang.String" itemvalue="center" />
+            <item index="8" class="java.lang.String" itemvalue="br" />
+            <item index="9" class="java.lang.String" itemvalue="strong" />
+            <item index="10" class="java.lang.String" itemvalue="tbody" />
+            <item index="11" class="java.lang.String" itemvalue="thead" />
+            <item index="12" class="java.lang.String" itemvalue="div" />
+          </list>
+        </value>
+      </option>
+      <option name="myCustomValuesEnabled" value="true" />
+    </inspection_tool>
+    <inspection_tool class="PyAbstractClassInspection" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="PyArgumentEqualDefaultInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyArgumentListInspection" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="PyMethodMayBeStaticInspection" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="PyPep8Inspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="E501" />
+          <option value="E722" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8NamingInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="N806" />
+          <option value="N801" />
+          <option value="N802" />
+          <option value="N803" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyStubPackagesAdvertiser" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="djangorestframework" />
+          <option value="pandas" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="department.default_str" />
+          <option value="datetime.datetime.timedelta" />
+          <option value="datetime.timezone.now" />
+          <option value="mysite.polls.models.Question.*" />
+          <option value="mysite.polls.models.Choice.DoesNotExist" />
+          <option value="self.assertIs" />
+          <option value="polls.models.Question.objects" />
+          <option value="polls.models.Dummy.objects" />
+          <option value="crudApp.urls.static" />
+          <option value="company.models.Organization.id" />
+          <option value="dict.error" />
+          <option value="project.models.Project.objects" />
+          <option value="project.forms.applyClassConfig2FormControl" />
+          <option value="self.user" />
+          <option value="project.views.self" />
+          <option value="company.models.Organization.objects" />
+          <option value="task.models.Task.objects" />
+          <option value="list.values" />
+          <option value="project.filters.ProjectNameFilter.task" />
+          <option value="users.forms.SignupForm.success_url" />
+          <option value="users.forms.UserLoginForm.Meta.cleaned_data" />
+          <option value="users.urls.include" />
+          <option value="django.forms.*" />
+          <option value="task.forms.UserTaskLogForm.fields" />
+          <option value="task.models.DailyLog.objects" />
+          <option value="datetime.strptime" />
+          <option value="form.cleaned_data" />
+          <option value="task.filters.LogFilter.cleaned_data" />
+          <option value="task.filters.LogFilter.q" />
+          <option value="task.filters.LogFilter.log" />
+          <option value="task.views.*" />
+          <option value="task.*" />
+          <option value="users.models.User.*" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PydanticTypeCheckerInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="SpellCheckingInspection" enabled="false" level="TYPO" enabled_by_default="false">
+      <option name="processCode" value="true" />
+      <option name="processLiterals" value="true" />
+      <option name="processComments" value="true" />
+    </inspection_tool>
+    <inspection_tool class="XmlInvalidId" enabled="false" level="ERROR" enabled_by_default="false" />
+  </profile>
+</component>
