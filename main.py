@@ -6,7 +6,7 @@ from services.llm_service import LLMService
 from services.prompt import SYSTEM_PROMPT
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
-from services.utils import get_llm_model
+from services.AI_models import get_llm_model
 from services.vector_db import get_vector_store
 
 app = FastAPI()
@@ -24,6 +24,7 @@ def upload_file(file: UploadFile = File(...)):
         },
     )
 
+    # This is where
     get_vector_store().add_documents(documents)
 
     return {
@@ -68,6 +69,7 @@ def search(user_query: str, top_k: int = 5):
 @app.post("/invoke")
 async def invoke(user_query: str):
     """
+    ******* Not Related To RAG & lagchain flow *******
     Direct Q/A with LLM.  (NO RAG)
     """
     conversation = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=user_query)]
@@ -80,6 +82,7 @@ async def invoke(user_query: str):
 @app.post("/stream")
 async def stream(user_query: str):
     """
+    ******* Not Related To RAG & lagchain flow *******
     Direct Q/A with LLM.  (NO RAG)
 
     You need to use socket for this.

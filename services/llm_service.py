@@ -2,7 +2,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from services.prompt import SYSTEM_PROMPT
-from services.utils import get_llm_model
+from services.AI_models import get_llm_model
 
 
 class LLMService:

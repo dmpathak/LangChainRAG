@@ -5,11 +5,11 @@ API_URL = "http://localhost:8000"
 
 st.set_page_config(
     page_title="Document RAG Assistant",
-    page_icon="📄",
+    page_icon="💬",   # Chat Assistant
     layout="wide",
 )
 
-st.title("📄 Document RAG Assistant")
+st.title("💬 Document RAG Assistant")
 
 # -----------------------------
 # Session State

@@ -5,10 +5,10 @@ from dotenv import load_dotenv
 load_dotenv()  # Load variables from .env
 
 # Milvus
-milvus_uri = "http://localhost:19530"
+MILVUS_URI = "http://localhost:19530"
 milvus_token = ""
 database_name = "ProductSearchRAG"
-collection_name = "products"
+collection_name = "MyLangChainCollection"
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 # LLM

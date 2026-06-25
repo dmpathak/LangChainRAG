@@ -1,3 +1,10 @@
+"""
+This File Only used for --> @app.post("/invoke") endpoint.
+Which is demo for direct llm call.
+
+******* Not Related To RAG & lagchain flow *******
+"""
+
 from pydantic import BaseModel, Field
 
 
