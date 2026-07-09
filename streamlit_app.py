@@ -5,25 +5,22 @@ API_URL = "http://localhost:8000"
 
 st.set_page_config(
     page_title="Document RAG Assistant",
-    page_icon="💬",   # Chat Assistant
+    page_icon="💬",
     layout="wide",
 )
 
 st.title("💬 Document RAG Assistant")
 
-# -----------------------------
+# ---------------------------------
 # Session State
-# -----------------------------
+# ---------------------------------
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-if "document_uploaded" not in st.session_state:
-    st.session_state.document_uploaded = False
-
-# -----------------------------
+# ---------------------------------
 # Sidebar
-# -----------------------------
+# ---------------------------------
 
 with st.sidebar:
     st.header("Upload Document")
@@ -33,54 +30,46 @@ with st.sidebar:
         type=["pdf", "docx", "csv", "xls", "xlsx"],
     )
 
-    if uploaded_file:
+    if uploaded_file and st.button("Upload Document"):
 
-        if st.button("Upload Document"):
+        with st.spinner("Indexing document..."):
 
-            with st.spinner("Indexing document..."):
+            files = {
+                "file": (
+                    uploaded_file.name,
+                    uploaded_file.getvalue(),
+                )
+            }
 
-                files = {
-                    "file": (
-                        uploaded_file.name,
-                        uploaded_file.getvalue(),
-                    )
-                }
-
+            try:
                 response = requests.post(
                     f"{API_URL}/upload",
                     files=files,
                 )
 
-                if response.status_code == 200:
+                if response.ok:
                     st.success("Document indexed successfully.")
-                    st.session_state.document_uploaded = True
                 else:
-                    st.error(
-                        f"Upload failed: {response.text}"
-                    )
+                    st.error(response.text)
 
-# -----------------------------
+            except requests.RequestException as exc:
+                st.error(str(exc))
+
+# ---------------------------------
 # Chat History
-# -----------------------------
+# ---------------------------------
 
 for message in st.session_state.messages:
-
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# -----------------------------
-# Chat Input
-# -----------------------------
+# ---------------------------------
+# Chat
+# ---------------------------------
 
 if prompt := st.chat_input(
-    "Ask anything about the uploaded document..."
+    "Ask anything about your indexed documents..."
 ):
-
-    if not st.session_state.document_uploaded:
-        st.warning(
-            "Please upload a document first."
-        )
-        st.stop()
 
     st.session_state.messages.append(
         {
@@ -105,15 +94,8 @@ if prompt := st.chat_input(
                 },
             )
 
-            if response.status_code == 200:
-
-                data = response.json()
-
-                answer = (
-                    data["answer"]
-                    if isinstance(data, dict)
-                    else str(data)
-                )
+            if response.ok:
+                answer = response.json()["answer"]
 
                 placeholder.markdown(answer)
 
@@ -125,9 +107,19 @@ if prompt := st.chat_input(
                 )
 
             else:
-                placeholder.error(
-                    f"Error: {response.text}"
-                )
+                error_message = response.text
 
-        except Exception as exc:
+                # Backend should return an appropriate message when
+                # no documents have been indexed yet.
+                try:
+                    error_message = response.json().get(
+                        "detail",
+                        error_message,
+                    )
+                except Exception:
+                    pass
+
+                placeholder.error(error_message)
+
+        except requests.RequestException as exc:
             placeholder.error(str(exc))

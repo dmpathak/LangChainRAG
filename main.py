@@ -46,7 +46,7 @@ def search(user_query: str, top_k: int = 5):
     )
     if not retrieved_docs:
         return {
-            "answer": "No relevant information found."
+            "answer": "No relevant information found or no documents have been indexed yet."
         }
 
     # Step 2: Create context
@@ -56,6 +56,7 @@ def search(user_query: str, top_k: int = 5):
     ])
 
     # Send to LLM:
+    print("Invoking LLM...")
     response = llm_service.get_response(
         query=user_query,
         context=context,

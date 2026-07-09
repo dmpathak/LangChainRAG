@@ -12,6 +12,7 @@ class VectorStore:
         self.vector_store = Milvus(
             embedding_function=get_embedding_model(),
             collection_name=collection_name,
+            enable_dynamic_field=True,
             connection_args={
                 "uri": MILVUS_URI
             },

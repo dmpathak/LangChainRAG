@@ -13,7 +13,7 @@ collection_name = "MyLangChainCollection"
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 # LLM
 LLM_URL = "https://openrouter.ai/api/v1/chat/completions"
-LLM_MODEL = "openai/gpt-oss-120b:free"
+LLM_MODEL = "tencent/hy3:free"  # "openai/gpt-oss-120b:free"
 LLM_MODEL_PROVIDER = "openrouter"
 
 # embeddings

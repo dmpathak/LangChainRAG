@@ -1,15 +1,24 @@
 """
-responsible for:
-    File
-     ↓
-    LangChain Documents
+Responsible for converting uploaded files into LangChain Documents.
+
+Processing strategy:
+
+Text files
+    PDF / DOCX
+        -> Extract text
+        -> Split into chunks
+        -> LangChain Documents
+
+Tabular files
+    CSV / XLS / XLSX
+        -> One Document per row
+        -> Row values stored as metadata for filtering
 """
 
 import os
 
 import fitz
 import pandas as pd
-
 from docx import Document as DocxDocument
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -23,28 +32,6 @@ TEXT_SPLITTER = RecursiveCharacterTextSplitter(
 class DocumentProcessor:
     """
     Convert uploaded files into LangChain Documents.
-
-    Supported file types:
-
-    Text files:
-        - PDF
-        - DOCX
-
-    Tabular files:
-        - CSV
-        - XLS
-        - XLSX
-
-    Processing strategy:
-
-    PDF / DOCX
-        File -> Text -> Chunked Documents
-
-    CSV / XLS / XLSX
-        File -> Row Documents
-
-    Output:
-        List[Document]
     """
 
     SUPPORTED_EXTENSIONS = {
@@ -57,20 +44,12 @@ class DocumentProcessor:
 
     def process(self, file, metadata=None):
         """
-        Main entry point.
-
-        Args:
-            file: Uploaded file object
-            metadata: dict
-
-        Returns:
-            List[Document]
+        Convert an uploaded file into LangChain Documents.
         """
 
         metadata = metadata or {}
 
-        filename = file.filename
-        extension = os.path.splitext(filename)[1].lower()
+        extension = os.path.splitext(file.filename)[1].lower()
 
         if extension not in self.SUPPORTED_EXTENSIONS:
             raise ValueError(
@@ -122,11 +101,11 @@ class DocumentProcessor:
     def _process_docx(self, file, metadata):
         file.seek(0)
 
-        doc = DocxDocument(file)
+        document = DocxDocument(file)
 
         text = "\n".join(
             paragraph.text
-            for paragraph in doc.paragraphs
+            for paragraph in document.paragraphs
             if paragraph.text.strip()
         )
 
@@ -146,26 +125,28 @@ class DocumentProcessor:
 
     def _process_csv(self, file, metadata):
         file.seek(0)
+
         try:
-            df = pd.read_csv(file)
+            dataframe = pd.read_csv(file)
         except UnicodeDecodeError:
             file.seek(0)
-            df = pd.read_csv(
+            dataframe = pd.read_csv(
                 file,
                 encoding="latin-1",
             )
 
         return self._create_row_documents(
-            dataframe=df,
+            dataframe=dataframe,
             metadata=metadata,
         )
 
     # =====================================================
-    # EXCEL
+    # Excel
     # =====================================================
 
     def _process_excel(self, file, metadata):
         file.seek(0)
+
         sheets = pd.read_excel(
             file,
             sheet_name=None,
@@ -174,60 +155,69 @@ class DocumentProcessor:
         documents = []
 
         for sheet_name, dataframe in sheets.items():
-            sheet_documents = self._create_row_documents(
-                dataframe=dataframe,
-                metadata={
-                    **metadata,
-                    "sheet_name": sheet_name,
-                },
-            )
 
-            documents.extend(sheet_documents)
+            documents.extend(
+                self._create_row_documents(
+                    dataframe=dataframe,
+                    metadata={
+                        **metadata,
+                        "sheet_name": sheet_name,
+                    },
+                )
+            )
 
         return documents
 
     # =====================================================
-    # HELPERS
+    # Helpers
     # =====================================================
 
     def _create_chunked_documents(
-            self,
-            text,
-            metadata,
+        self,
+        text,
+        metadata,
     ):
         """
-        Create chunked documents for text-based files.
+        Split extracted text into chunked LangChain Documents.
         """
 
-        document = Document(
-            page_content=text,
-            metadata=metadata,
-        )
-
         return TEXT_SPLITTER.split_documents(
-            [document]
+            [
+                Document(
+                    page_content=text,
+                    metadata=metadata,
+                )
+            ]
         )
 
     def _create_row_documents(
-            self,
-            dataframe,
-            metadata,
+        self,
+        dataframe,
+        metadata,
     ):
         """
-        Create one Document per row.
+        Create one LangChain Document per DataFrame row.
 
-        Improves retrieval quality for structured data.
+        - page_content is used for semantic search.
+        - metadata stores structured values for filtering.
         """
 
         documents = []
 
-        for row_number, (_, row) in enumerate(
-                dataframe.iterrows(),
-                start=1,
-        ):
+        for _, row in dataframe.iterrows():
+
+            # Ignore completely empty rows.
+            if row.isna().all():
+                continue
+
+            row_metadata = {
+                column: self._normalize_metadata_value(value)
+                for column, value in row.items()
+            }
+
             row_text = "\n".join(
                 f"{column}: {value}"
-                for column, value in row.items()
+                for column, value in row_metadata.items()
             )
 
             documents.append(
@@ -235,8 +225,26 @@ class DocumentProcessor:
                     page_content=row_text,
                     metadata={
                         **metadata,
+                        **row_metadata,
                     },
                 )
             )
 
         return documents
+
+    @staticmethod
+    def _normalize_metadata_value(value):
+        """
+        Convert Pandas/NumPy values into native Python types.
+        """
+
+        if pd.isna(value):
+            return None
+
+        if hasattr(value, "item"):
+            value = value.item()
+
+        if isinstance(value, float) and value.is_integer():
+            return int(value)
+
+        return value

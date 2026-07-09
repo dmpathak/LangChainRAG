@@ -148,10 +148,10 @@ def provision(drop_existing: bool = False):
     )
 
     # Product price.
-    # Consider INT64 if exact money precision is required.
+    # Consider FLOAT if exact money precision is required.
     schema.add_field(
         field_name="price",
-        datatype=DataType.INT64,
+        datatype=DataType.FLOAT,
         nullable=True
     )
 
