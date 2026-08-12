@@ -34,7 +34,7 @@ def upload_file(file: UploadFile = File(...)):
 
 
 @app.post("/search")
-def search(user_query: str, top_k: int = 5):
+def search(user_query: str, top_k: int = 50):  # top_k value getting from Streamlit UI
     """
     Search products.
     This is a RAG (Retrieval Augmented Generation) system.

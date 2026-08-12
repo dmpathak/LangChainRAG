@@ -29,6 +29,7 @@ with st.sidebar:
         "Choose a file",
         type=["pdf", "docx", "csv", "xls", "xlsx"],
     )
+    top_retrieve = st.number_input("Number of documents to retrieve", 1, 100, 50)
 
     if uploaded_file and st.button("Upload Document"):
 
@@ -90,7 +91,7 @@ if prompt := st.chat_input(
                 f"{API_URL}/search",
                 params={
                     "user_query": prompt,
-                    "top_k": 5,
+                    "top_k": top_retrieve,
                 },
             )
 
