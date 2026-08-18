@@ -2,7 +2,7 @@ import time
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from services.prompt import SYSTEM_PROMPT
+from services.prompt import RAG_USER_PROMPT, SYSTEM_PROMPT
 from services.AI_models import get_llm_model
 
 
@@ -13,7 +13,7 @@ class LLMService:
                 ChatPromptTemplate.from_messages(
                     [
                         ("system", SYSTEM_PROMPT),
-                        ("human", """Context: {context}  Question: {question}"""),
+                        ("human", RAG_USER_PROMPT),
                     ]
                 )
                 | get_llm_model()

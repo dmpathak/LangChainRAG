@@ -29,7 +29,7 @@ with st.sidebar:
         "Choose a file",
         type=["pdf", "docx", "csv", "xls", "xlsx"],
     )
-    top_retrieve = st.number_input("Number of documents to retrieve", 1, 100, 50)
+    top_retrieve = st.number_input("Number of documents to retrieve", 1, 500, 50)
 
     if uploaded_file and st.button("Upload Document"):
 

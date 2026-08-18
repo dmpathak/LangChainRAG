@@ -10,11 +10,14 @@ milvus_token = ""
 database_name = "ProductSearchRAG"
 collection_name = "MyLangChainCollection"
 
+# Each provider must receive its own API key.
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
+
 # LLM
-LLM_URL = "https://openrouter.ai/api/v1/chat/completions"
-LLM_MODEL = "nvidia/nemotron-3.5-lightning:free"
-LLM_MODEL_PROVIDER = "openrouter"
+LLM_URL = "https://integrate.api.nvidia.com/v1"  # "https://openrouter.ai/api/v1/chat/completions"
+LLM_MODEL = "nvidia/nemotron-3-super-120b-a12b"  # "nvidia/nemotron-3.5-lightning:free"
+LLM_MODEL_PROVIDER = "nvidia"  # "openrouter"
 
 # embeddings
 EMBEDDING_URL = "https://openrouter.ai/api/v1"
