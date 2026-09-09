@@ -12,9 +12,7 @@ client = OpenAI(
 
 response = client.chat.completions.create(
     model="openai/gpt-oss-120b:free",
-    messages=[
-        {"role": "user", "content": "Say hello"}
-    ],
+    messages=[{"role": "user", "content": "Say hello"}],
 )
 
 print(response.choices[0].message.content)

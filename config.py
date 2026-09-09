@@ -1,32 +1,34 @@
-"""Simple configuration file."""
 import os
+
 from dotenv import load_dotenv
 
-load_dotenv()  # Load variables from .env
+load_dotenv()
 
 # Milvus
 MILVUS_URI = "http://localhost:19530"
-milvus_token = ""
-database_name = "ProductSearchRAG"
 collection_name = "MyLangChainCollection"
 
-# Each provider must receive its own API key.
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
 
 # LLM
-LLM_URL = "https://integrate.api.nvidia.com/v1"  # "https://openrouter.ai/api/v1/chat/completions"
-LLM_MODEL = "nvidia/nemotron-3-super-120b-a12b"  # "nvidia/nemotron-3.5-lightning:free"
-LLM_MODEL_PROVIDER = "nvidia"  # "openrouter"
+LLM_MODEL = "nvidia/nemotron-3-super-120b-a12b"
+LLM_MODEL_PROVIDER = "nvidia"
 
-# embeddings
+# Embeddings
 EMBEDDING_URL = "https://openrouter.ai/api/v1"
-EMBEDDING_MODEL = "nvidia/nemotron-3-embed-1b:free"
+EMBEDDING_MODEL = "inclusionai/ling-3.0-flash-fin:free"
 EMBEDDING_MODEL_PROVIDER = "openrouter"
+EMBEDDING_DOCUMENT_INPUT_TYPE = "passage"
+EMBEDDING_QUERY_INPUT_TYPE = "query"
 
-# # Reranking (Jina). Leave the key empty to run dense-only retrieval.
-# rerank_enabled: bool = True
-# jina_api_key= ""
-# rerank_model = "jina-reranker-v2-base-multilingual"
+# Retrieval
+FINAL_CONTEXT_DOCUMENTS = 8
+MIN_DENSE_SCORE = 0.20
+CHUNK_SIZE = 1000
+CHUNK_OVERLAP = 200
 
-UPLOAD_DIR = "data/uploads"
+# HNSW
+HNSW_M = 16
+HNSW_EF_CONSTRUCTION = 200
+HNSW_EF_SEARCH = 100
