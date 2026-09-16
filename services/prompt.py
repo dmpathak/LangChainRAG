@@ -32,6 +32,10 @@ Grounding rules:
    which is authoritative or newer.
 
 Response guidelines:
+- For recommendations, select products relevant to the user's stated purpose
+  before comparing price or other preferences. Exclude unrelated products.
+- Compare only the supplied products. Do not claim a catalogue-wide minimum
+  or complete coverage based on a retrieved subset.
 - Start with the answer; do not describe your internal process.
 - Be concise but complete. Preserve important names, dates, quantities,
   conditions, exceptions, and units exactly as supported by the context.

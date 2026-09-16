@@ -18,28 +18,28 @@ if "messages" not in st.session_state:
 with st.sidebar:
     st.header("Upload Document")
 
+    collection_name = st.selectbox(
+        "Document collection",
+        ["MyLangChainCollection", "documents"],
+        key="collection_selector",
+    )
+
     uploaded_file = st.file_uploader(
         "Choose a file",
         type=["pdf", "docx", "csv", "xls", "xlsx"],
     )
     top_retrieve = st.number_input("Final context documents", 1, 30, 15)
 
-    with st.expander("Optional product filters"):
-        brand = st.text_input("Brand")
-        category = st.text_input("Category")
-        min_price = st.number_input("Minimum price", min_value=0.0, value=None)
-        max_price = st.number_input("Maximum price", min_value=0.0, value=None)
-        min_rating = st.number_input(
-            "Minimum rating", min_value=0.0, max_value=5.0, value=None
-        )
-        in_stock = st.checkbox("In stock only")
-
     if uploaded_file and st.button("Upload Document"):
         with st.spinner("Indexing document..."):
             files = {"file": (uploaded_file.name, uploaded_file.getvalue())}
 
             try:
-                response = requests.post(f"{API_URL}/upload", files=files)
+                response = requests.post(
+                    f"{API_URL}/upload",
+                    files=files,
+                    data={"collection_name": collection_name},
+                )
 
                 if response.ok:
                     st.success("Document indexed successfully.")
@@ -72,12 +72,7 @@ if prompt:
                 params={
                     "user_query": prompt,
                     "top_k": top_retrieve,
-                    "brand": brand or None,
-                    "category": category or None,
-                    "min_price": min_price,
-                    "max_price": max_price,
-                    "min_rating": min_rating,
-                    "in_stock": in_stock or None,
+                    "collection_name": collection_name,
                 },
             )
 
@@ -97,10 +92,6 @@ if prompt:
 
                 if source_names:
                     st.caption("Sources: " + ", ".join(source_names))
-
-                if response_data.get("search_plan"):
-                    with st.expander("LLM search plan"):
-                        st.json(response_data["search_plan"])
 
                 assistant_message = {"role": "assistant", "content": answer}
                 st.session_state.messages.append(assistant_message)

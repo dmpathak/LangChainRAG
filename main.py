@@ -1,13 +1,13 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, Form, UploadFile
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from config import collection_name as default_collection_name
 from schema import Movie
 from services.AI_models import get_llm_model
 from services.document_parser import DocumentProcessor
 from services.llm_service import LLMService
 from services.prompt import SYSTEM_PROMPT
 from services.retrieval_service import get_retrieval_service
-from services.search_filters import SearchFilters
 
 app = FastAPI()
 llm_model = get_llm_model()
@@ -16,12 +16,15 @@ llm_service = LLMService()
 
 
 @app.post("/upload")
-def upload_file(file: UploadFile = File(...)):
+def upload_file(
+    file: UploadFile = File(...),
+    collection_name: str = Form(default_collection_name),
+):
     documents = document_processor.process(
         file=file,
         metadata={"file_name": file.filename},
     )
-    get_retrieval_service().add_documents(documents)
+    get_retrieval_service(collection_name).add_documents(documents)
     return {"status": "success", "documents_indexed": len(documents)}
 
 
@@ -29,26 +32,12 @@ def upload_file(file: UploadFile = File(...)):
 def search(
     user_query: str,
     top_k: int = 8,
-    brand: str | None = None,
-    category: str | None = None,
-    min_price: float | None = None,
-    max_price: float | None = None,
-    min_rating: float | None = None,
-    in_stock: bool | None = None,
+    collection_name: str = default_collection_name,
 ):
     """Search the indexed documents and answer the user's question."""
-    filters = SearchFilters(
-        brand=brand,
-        category=category,
-        min_price=min_price,
-        max_price=max_price,
-        min_rating=min_rating,
-        in_stock=in_stock,
-    )
-    retrieved_docs = get_retrieval_service().search(
+    retrieved_docs = get_retrieval_service(collection_name).search(
         query=user_query,
-        filters=filters,
-        top_k=min(max(top_k, 1), 20),
+        top_k=min(max(top_k, 1), 30),
     )
     if not retrieved_docs:
         return {
@@ -77,7 +66,6 @@ def search(
     return {
         "answer": answer,
         "sources_found": len(retrieved_docs),
-        "search_plan": retrieved_docs[0].metadata.get("search_plan"),
         "sources": sources,
     }
 

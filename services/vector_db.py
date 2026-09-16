@@ -1,7 +1,6 @@
 import json
 from functools import lru_cache
 
-from langchain_core.documents import Document
 from langchain_milvus import Milvus
 from config import (
     HNSW_EF_CONSTRUCTION,
@@ -14,7 +13,7 @@ from services.AI_models import get_embedding_model
 
 
 class VectorStore:
-    def __init__(self):
+    def __init__(self, collection_name):
         self.vector_store = Milvus(
             embedding_function=get_embedding_model(),
             collection_name=collection_name,
@@ -29,7 +28,6 @@ class VectorStore:
                 },
             },
         )
-        self._available_fields = set()
 
     def add_documents(self, documents):
         product_id_set = set()
@@ -43,11 +41,9 @@ class VectorStore:
             expression = f"product_id in {json.dumps(product_ids)}"
             self.vector_store.col.delete(expr=expression)
 
-        for document in documents:
-            self._available_fields.update(document.metadata)
         return self.vector_store.add_documents(documents)
 
-    def similarity_search_with_score(self, query, top_k, filter_expression=None):
+    def similarity_search_with_score(self, query, top_k):
         search_params = {
             "metric_type": "COSINE",
             "params": {"ef": max(HNSW_EF_SEARCH, top_k)},
@@ -56,51 +52,10 @@ class VectorStore:
             query=query,
             k=top_k,
             param=search_params,
-            expr=filter_expression,
         )
 
-    def all_documents(self, filter_expression=None):
-        if self.vector_store.col is None:
-            return []
 
-        iterator = self.vector_store.col.query_iterator(
-            expr=filter_expression or "pk >= 0",
-            output_fields=["*"],
-            batch_size=1000,
-        )
-
-        documents = []
-        try:
-            while True:
-                batch = iterator.next()
-                if not batch:
-                    break
-
-                for row in batch:
-                    page_content = row.pop("text", "")
-                    row.pop("vector", None)
-                    documents.append(Document(page_content=page_content, metadata=row))
-        finally:
-            iterator.close()
-        return documents
-
-    def available_fields(self):
-        if self._available_fields:
-            return sorted(self._available_fields)
-        if self.vector_store.col is None:
-            return []
-
-        rows = self.vector_store.col.query(
-            expr="pk >= 0",
-            output_fields=["*"],
-            limit=1,
-        )
-        if rows:
-            self._available_fields.update(rows[0])
-        self._available_fields.difference_update({"pk", "text", "vector"})
-        return sorted(self._available_fields)
-
-
-@lru_cache(maxsize=1)
-def get_vector_store():
-    return VectorStore()
+@lru_cache(maxsize=32)
+def get_vector_store(collection_name=collection_name):
+    """Return one cached Milvus wrapper per collection."""
+    return VectorStore(collection_name=collection_name)
