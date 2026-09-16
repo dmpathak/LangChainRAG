@@ -1,6 +1,8 @@
 import requests
 import streamlit as st
 
+from config import collection_name, document_collection_name
+
 API_URL = "http://localhost:8000"
 
 st.set_page_config(
@@ -20,7 +22,7 @@ with st.sidebar:
 
     collection_name = st.selectbox(
         "Document collection",
-        ["MyLangChainCollection", "documents"],
+        [f"{collection_name} -> CSV, XLS, XLSX", f"{document_collection_name} -> PDF, DOCX"],
         key="collection_selector",
     )
 
