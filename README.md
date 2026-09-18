@@ -160,7 +160,7 @@ The current default configuration is:
 | Chunk overlap | `200` characters |
 | Default collection | `MyLangChainCollection` |
 
-These values are defined in [config.py](config.py).
+These values are defined in [app/config.py](app/config.py).
 
 ## 4. Start Milvus
 
@@ -198,7 +198,7 @@ Keep Milvus running and open a terminal in the project directory:
 
 ```bash
 source .venv/bin/activate
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1` first.
@@ -211,12 +211,12 @@ Open a second terminal, activate the same environment, and run:
 
 ```bash
 source .venv/bin/activate
-streamlit run streamlit_app.py
+streamlit run app/frontend/streamlit_app.py
 ```
 
 Streamlit normally opens at [http://localhost:8501](http://localhost:8501).
 
-The Streamlit application expects the FastAPI backend at `http://localhost:8000`. Change `API_URL` at the top of [streamlit_app.py](streamlit_app.py) if the backend runs elsewhere.
+The Streamlit application expects the FastAPI backend at `http://localhost:8000`. Change `API_URL` at the top of [app/frontend/streamlit_app.py](frontend/streamlit_app.py) if the backend runs elsewhere.
 
 ## 7. Upload and query a document
 
@@ -304,14 +304,14 @@ curl http://localhost:8000/health
 
 | File | Purpose |
 |---|---|
-| `streamlit_app.py` | Web interface for uploading files and asking questions. |
-| `main.py` | FastAPI endpoints for upload, search, document management, and health. |
-| `config.py` | Models, Milvus connection, chunking, and retrieval settings. |
-| `services/document_parser.py` | Reads supported file types and creates LangChain documents. |
-| `services/vector_db.py` | Creates the Milvus vector store and performs insert and similarity search operations. |
-| `services/retrieval_service.py` | Connects API requests to the selected vector store. |
-| `services/AI_models.py` | Creates the chat and embedding model clients. |
-| `services/llm_service.py` | Builds the RAG prompt chain and handles rate-limit retries. |
+| `frontend` | Web interface for uploading files and asking questions. |
+| `app/main.py` | FastAPI endpoints for upload, search, document management, and health. |
+| `app/config.py` | Models, Milvus connection, chunking, and retrieval settings. |
+| `app/rag_services/documents/` | File parsing and document preparation. |
+| `app/rag_services/retrieval/` | Vector, hybrid, reranking, and structured query services. |
+| `app/rag_services/llm/` | Chat model, embedding model, prompts, and LLM service. |
+| `app/auth/` | Authentication and collection permissions, to be implemented next. |
+| `app/database.py` | Database entry point for the authentication phase. |
 | `docker-compose.yml` | Runs Milvus, etcd, MinIO, and Attu. |
 | `Others/` | Schema migration scripts, examples, and reference notes. |
 
@@ -377,11 +377,11 @@ docker compose up -d
 
 # Terminal 2
 source .venv/bin/activate
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # Terminal 3
 source .venv/bin/activate
-streamlit run streamlit_app.py
+streamlit run app/frontend/streamlit_app.py
 ```
 
 Open Streamlit, select a collection, upload/select collaction, and ask a question.

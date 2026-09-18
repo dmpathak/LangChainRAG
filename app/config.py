@@ -4,28 +4,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Milvus
-MILVUS_URI = "http://localhost:19530"
-collection_name = "MyLangChainCollection"
-document_collection_name = "documents"
+MILVUS_URI = os.getenv("MILVUS_URI", "http://localhost:19530")
+DEFAULT_COLLECTION_NAME = os.getenv("DEFAULT_COLLECTION_NAME", "MyLangChainCollection")
+DOCUMENT_COLLECTION_NAME = os.getenv("DOCUMENT_COLLECTION_NAME", "documents")
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
 APP_API_KEY = os.getenv("APP_API_KEY", "")
 
-# LLM
 LLM_MODEL = "nvidia/nemotron-3-super-120b-a12b"
 LLM_MODEL_PROVIDER = "nvidia"
-
-# Embeddings
 EMBEDDING_URL = "https://openrouter.ai/api/v1"
-# Use the same embedding model for uploads and searches (previous working config).
 EMBEDDING_MODEL = "nvidia/nemotron-3-embed-1b:free"
-EMBEDDING_MODEL_PROVIDER = "openrouter"
 EMBEDDING_DOCUMENT_INPUT_TYPE = "passage"
 EMBEDDING_QUERY_INPUT_TYPE = "query"
 
-# Retrieval
 FINAL_CONTEXT_DOCUMENTS = 8
 MIN_SIMILARITY_SCORE = float(os.getenv("MIN_SIMILARITY_SCORE", "0.0"))
 RETRIEVAL_MODE = os.getenv("RETRIEVAL_MODE", "hybrid")
@@ -37,7 +30,6 @@ CHUNK_OVERLAP = 200
 MAX_UPLOAD_SIZE_MB = int(os.getenv("MAX_UPLOAD_SIZE_MB", "30"))
 OCR_ENABLED = os.getenv("OCR_ENABLED", "true").lower() == "true"
 
-# HNSW
 HNSW_M = 16
 HNSW_EF_CONSTRUCTION = 200
 HNSW_EF_SEARCH = 100

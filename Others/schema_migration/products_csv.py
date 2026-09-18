@@ -5,8 +5,13 @@ import sys
 
 from pymilvus import DataType, MilvusClient
 
-from config import HNSW_EF_CONSTRUCTION, HNSW_M, MILVUS_URI, collection_name
-from services.AI_models import get_embedding_model
+from app.config import (
+    DEFAULT_COLLECTION_NAME as collection_name,
+    HNSW_EF_CONSTRUCTION,
+    HNSW_M,
+    MILVUS_URI,
+)
+from app.rag_services.llm.AI_models import get_embedding_model
 
 
 def provision(drop_existing=False):

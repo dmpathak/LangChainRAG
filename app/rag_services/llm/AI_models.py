@@ -1,7 +1,8 @@
 from langchain.chat_models import init_chat_model
-from config import (
-    EMBEDDING_MODEL,
+
+from app.config import (
     EMBEDDING_DOCUMENT_INPUT_TYPE,
+    EMBEDDING_MODEL,
     EMBEDDING_QUERY_INPUT_TYPE,
     EMBEDDING_URL,
     LLM_MODEL,
@@ -9,8 +10,7 @@ from config import (
     NVIDIA_API_KEY,
     OPENROUTER_API_KEY,
 )
-
-from services.openrouter_embeddings import OpenRouterEmbeddings
+from app.rag_services.llm.openrouter_embeddings import OpenRouterEmbeddings
 
 
 def get_llm_model():

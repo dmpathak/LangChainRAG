@@ -3,7 +3,7 @@ RUN: python -m Others.test_llm
 """
 from openai import OpenAI
 
-from config import OPENROUTER_API_KEY
+from app.config import OPENROUTER_API_KEY
 
 client = OpenAI(
     api_key=OPENROUTER_API_KEY,

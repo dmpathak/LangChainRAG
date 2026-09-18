@@ -1,16 +1,17 @@
 import json
 from functools import lru_cache
 
-from langchain_milvus import Milvus
 from langchain_core.documents import Document
-from config import (
+from langchain_milvus import Milvus
+
+from app.config import (
     HNSW_EF_CONSTRUCTION,
     HNSW_EF_SEARCH,
     HNSW_M,
     MILVUS_URI,
-    collection_name,
+    DEFAULT_COLLECTION_NAME,
 )
-from services.AI_models import get_embedding_model
+from app.rag_services.llm.AI_models import get_embedding_model
 
 
 class VectorStore:
@@ -31,15 +32,11 @@ class VectorStore:
         )
 
     def add_documents(self, documents):
-        # Keep the existing product import behavior: re-imported products
-        # replace older rows with the same product_id.
-        product_ids = sorted(
-            {
-                str(document.metadata["product_id"])
-                for document in documents
-                if document.metadata.get("product_id") is not None
-            }
-        )
+        product_ids = sorted({
+            str(document.metadata["product_id"])
+            for document in documents
+            if document.metadata.get("product_id") is not None
+        })
         if product_ids and self.vector_store.col is not None:
             self.vector_store.col.delete(
                 expr=f"product_id in {json.dumps(product_ids)}"
@@ -47,20 +44,14 @@ class VectorStore:
         return self.vector_store.add_documents(documents)
 
     def similarity_search_with_score(self, query, top_k, file_name=None):
-        search_params = {
+        params = {
             "metric_type": "COSINE",
             "params": {"ef": max(HNSW_EF_SEARCH, top_k)},
         }
-        kwargs = {
-            "query": query,
-            "k": top_k,
-            "param": search_params,
-        }
+        kwargs = {"query": query, "k": top_k, "param": params}
         if file_name:
             kwargs["expr"] = f"file_name == {json.dumps(file_name)}"
-        return self.vector_store.similarity_search_with_score(
-            **kwargs,
-        )
+        return self.vector_store.similarity_search_with_score(**kwargs)
 
     def has_file_hash(self, file_hash):
         if self.vector_store.col is None:
@@ -72,7 +63,6 @@ class VectorStore:
                 limit=1,
             )
         except Exception:
-            # Older collections may not contain the new dynamic field yet.
             return False
         return bool(rows)
 
@@ -88,8 +78,11 @@ class VectorStore:
     def list_documents(self):
         if self.vector_store.col is None:
             return []
-        fields = ["file_name", "file_hash", "document_id"]
-        rows = self.vector_store.col.query(expr="", output_fields=fields, limit=10000)
+        rows = self.vector_store.col.query(
+            expr="",
+            output_fields=["file_name", "file_hash"],
+            limit=10000,
+        )
         documents = {}
         for row in rows:
             file_name = row.get("file_name") or "unknown"
@@ -101,12 +94,9 @@ class VectorStore:
         return list(documents.values())
 
     def get_all_documents(self, file_name=None):
-        """Load stored rows for exact comparisons such as min/max price."""
         if self.vector_store.col is None:
             return []
-        expression = ""
-        if file_name:
-            expression = f"file_name == {json.dumps(file_name)}"
+        expression = f"file_name == {json.dumps(file_name)}" if file_name else ""
         rows = self.vector_store.col.query(
             expr=expression,
             output_fields=["*"],
@@ -125,6 +115,5 @@ class VectorStore:
 
 
 @lru_cache(maxsize=32)
-def get_vector_store(collection_name=collection_name):
-    """Return one cached Milvus wrapper per collection."""
+def get_vector_store(collection_name=DEFAULT_COLLECTION_NAME):
     return VectorStore(collection_name=collection_name)
