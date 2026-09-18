@@ -9,7 +9,14 @@ from docx import Document as DocxDocument
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from config import CHUNK_OVERLAP, CHUNK_SIZE
+from config import CHUNK_OVERLAP, CHUNK_SIZE, OCR_ENABLED
+
+try:
+    import pytesseract
+    from PIL import Image
+except ImportError:  # OCR is optional for normal text PDFs.
+    pytesseract = None
+    Image = None
 
 
 TEXT_SPLITTER = RecursiveCharacterTextSplitter(
@@ -43,6 +50,8 @@ class DocumentProcessor:
 
         for page_number, page in enumerate(pdf, start=1):
             text = page.get_text()
+            if not text.strip() and OCR_ENABLED:
+                text = self._extract_text_with_ocr(page)
             if not text.strip():
                 continue
 
@@ -52,8 +61,19 @@ class DocumentProcessor:
             documents.extend(page_documents)
 
         if not documents:
-            raise ValueError("Unable to extract text from PDF.")
+            raise ValueError(
+                "Unable to extract text from PDF. For scanned PDFs, install "
+                "pytesseract, Pillow, and the Tesseract system package."
+            )
         return documents
+
+    @staticmethod
+    def _extract_text_with_ocr(page):
+        if pytesseract is None or Image is None:
+            return ""
+        pixmap = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
+        image = Image.frombytes("RGB", [pixmap.width, pixmap.height], pixmap.samples)
+        return pytesseract.image_to_string(image)
 
     def _process_docx(self, file, metadata):
         file.seek(0)

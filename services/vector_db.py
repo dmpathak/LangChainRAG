@@ -2,6 +2,7 @@ import json
 from functools import lru_cache
 
 from langchain_milvus import Milvus
+from langchain_core.documents import Document
 from config import (
     HNSW_EF_CONSTRUCTION,
     HNSW_EF_SEARCH,
@@ -30,29 +31,97 @@ class VectorStore:
         )
 
     def add_documents(self, documents):
-        product_id_set = set()
-        for document in documents:
-            product_id = document.metadata.get("product_id")
-            if product_id is not None:
-                product_id_set.add(str(product_id))
-
-        product_ids = sorted(product_id_set)
+        # Keep the existing product import behavior: re-imported products
+        # replace older rows with the same product_id.
+        product_ids = sorted(
+            {
+                str(document.metadata["product_id"])
+                for document in documents
+                if document.metadata.get("product_id") is not None
+            }
+        )
         if product_ids and self.vector_store.col is not None:
-            expression = f"product_id in {json.dumps(product_ids)}"
-            self.vector_store.col.delete(expr=expression)
-
+            self.vector_store.col.delete(
+                expr=f"product_id in {json.dumps(product_ids)}"
+            )
         return self.vector_store.add_documents(documents)
 
-    def similarity_search_with_score(self, query, top_k):
+    def similarity_search_with_score(self, query, top_k, file_name=None):
         search_params = {
             "metric_type": "COSINE",
             "params": {"ef": max(HNSW_EF_SEARCH, top_k)},
         }
+        kwargs = {
+            "query": query,
+            "k": top_k,
+            "param": search_params,
+        }
+        if file_name:
+            kwargs["expr"] = f"file_name == {json.dumps(file_name)}"
         return self.vector_store.similarity_search_with_score(
-            query=query,
-            k=top_k,
-            param=search_params,
+            **kwargs,
         )
+
+    def has_file_hash(self, file_hash):
+        if self.vector_store.col is None:
+            return False
+        try:
+            rows = self.vector_store.col.query(
+                expr=f"file_hash == {json.dumps(file_hash)}",
+                output_fields=["file_hash"],
+                limit=1,
+            )
+        except Exception:
+            # Older collections may not contain the new dynamic field yet.
+            return False
+        return bool(rows)
+
+    def delete_by_file_name(self, file_name):
+        if self.vector_store.col is None:
+            return 0
+        result = self.vector_store.col.delete(
+            expr=f"file_name == {json.dumps(file_name)}"
+        )
+        self.vector_store.col.flush()
+        return getattr(result, "delete_count", 0)
+
+    def list_documents(self):
+        if self.vector_store.col is None:
+            return []
+        fields = ["file_name", "file_hash", "document_id"]
+        rows = self.vector_store.col.query(expr="", output_fields=fields, limit=10000)
+        documents = {}
+        for row in rows:
+            file_name = row.get("file_name") or "unknown"
+            summary = documents.setdefault(
+                file_name,
+                {"file_name": file_name, "file_hash": row.get("file_hash"), "chunks": 0},
+            )
+            summary["chunks"] += 1
+        return list(documents.values())
+
+    def get_all_documents(self, file_name=None):
+        """Load stored rows for exact comparisons such as min/max price."""
+        if self.vector_store.col is None:
+            return []
+        expression = ""
+        if file_name:
+            expression = f"file_name == {json.dumps(file_name)}"
+        rows = self.vector_store.col.query(
+            expr=expression,
+            output_fields=["*"],
+            limit=10000,
+        )
+        documents = []
+        for row in rows:
+            page_content = row.pop("text", "")
+            metadata = {
+                key: value
+                for key, value in row.items()
+                if key not in {"vector", "pk", "id"}
+            }
+            documents.append(Document(page_content=page_content, metadata=metadata))
+        return documents
 
 
 @lru_cache(maxsize=32)

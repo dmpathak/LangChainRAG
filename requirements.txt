@@ -1,6 +1,7 @@
 fastapi==0.136.1
 uvicorn==0.47.0
 streamlit==1.57.0
+requests>=2.31,<3
 
 pymilvus==2.6.9
 
@@ -13,6 +14,8 @@ langchain-text-splitters==1.1.2
 python-dotenv==1.2.2
 
 python-docx==1.2.0
+pytesseract>=0.3.13,<1
+Pillow>=11,<13
 pymupdf==1.27.2.3
 
 

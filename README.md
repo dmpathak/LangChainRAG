@@ -43,6 +43,51 @@ Milvus returns similar chunks
 NVIDIA generates the final answer
 ```
 
+## How one request works
+
+### Upload
+
+```text
+Streamlit selects a collection
+    ↓
+FastAPI receives the file
+    ↓
+file hash checks for a duplicate
+    ↓
+DocumentProcessor extracts text or rows
+    ↓
+chunks/rows receive metadata and embeddings
+    ↓
+Milvus stores them in the selected collection
+```
+
+Uploading the same file again is skipped. Uploading a changed file with the
+same name removes the old file's chunks before storing the new version.
+
+### Search
+
+```text
+Streamlit sends question + collection name
+    ↓
+RetrievalService uses that collection only
+    ↓
+Milvus returns vector candidates
+    ↓
+hybrid mode adds exact keyword matches
+    ↓
+local reranking orders the candidates
+    ↓
+minimum score removes weak candidates
+    ↓
+remaining text becomes the LLM context
+    ↓
+LLM writes a grounded answer with [Document N] citations
+```
+
+CSV and Excel rows are separate stored documents. PDF and DOCX text is split
+into chunks. The Streamlit source display groups those rows or chunks back
+under their original filename.
+
 ## Requirements
 
 Install these tools before starting:
@@ -88,6 +133,18 @@ Create a `.env` file in the project root:
 ```env
 OPENROUTER_API_KEY=your_openrouter_api_key
 NVIDIA_API_KEY=your_nvidia_api_key
+# Optional API protection. Leave empty for local learning.
+APP_API_KEY=
+# Minimum cosine score accepted by retrieval.
+MIN_SIMILARITY_SCORE=0.0
+RETRIEVAL_MODE=hybrid
+VECTOR_WEIGHT=0.7
+KEYWORD_WEIGHT=0.3
+RERANK_ENABLED=true
+# Maximum upload size in MB.
+MAX_UPLOAD_SIZE_MB=25
+# Use OCR fallback for scanned PDFs when Tesseract is installed.
+OCR_ENABLED=true
 ```
 
 Do not commit `.env`. It is already excluded by `.gitignore`.
@@ -198,20 +255,57 @@ curl -X POST "http://localhost:8000/search?user_query=What%20is%20this%20documen
 
 `top_k` is limited to a maximum of 30 by the API.
 
-### Direct structured output demo
+The optional `file_name` parameter limits search to one uploaded file. The
+optional `min_score` parameter overrides the configured score threshold for a
+request.
+
+Search uses hybrid retrieval by default: Milvus vector search is combined with
+keyword matching for exact names, product IDs, and technical terms. The
+combined candidates are then reranked before they are sent to the LLM. Set
+`RETRIEVAL_MODE=vector` to compare the older vector-only behavior.
+
+### Document management
+
+List indexed files:
 
 ```bash
-curl -X POST "http://localhost:8000/invoke?user_query=Give%20me%20a%20movie%20recommendation"
+curl "http://localhost:8000/documents?collection_name=MyLangChainCollection"
 ```
 
-The `/invoke` and `/stream` routes are standalone LLM demos and do not use the uploaded documents.
+Delete one file and all of its chunks:
+
+```bash
+curl -X DELETE "http://localhost:8000/documents?file_name=handbook.pdf&collection_name=MyLangChainCollection"
+```
+
+Uploading the same file again is skipped using its SHA-256 hash. Uploading a
+changed file with the same name deletes the old chunks before indexing the new
+version.
+
+### Retrieval evaluation
+
+Add questions for your own document to `evaluation/questions.json`, upload that
+document, and run:
+
+```bash
+python evaluation/evaluate_retrieval.py --file-name handbook.pdf
+```
+
+This first evaluation measures retrieval hit rate. It does not yet judge the
+quality of the generated answer.
+
+### Health check
+
+```bash
+curl http://localhost:8000/health
+```
 
 ## Main files
 
 | File | Purpose |
 |---|---|
 | `streamlit_app.py` | Web interface for uploading files and asking questions. |
-| `main.py` | FastAPI endpoints for upload, search, and direct LLM calls. |
+| `main.py` | FastAPI endpoints for upload, search, document management, and health. |
 | `config.py` | Models, Milvus connection, chunking, and retrieval settings. |
 | `services/document_parser.py` | Reads supported file types and creates LangChain documents. |
 | `services/vector_db.py` | Creates the Milvus vector store and performs insert and similarity search operations. |
